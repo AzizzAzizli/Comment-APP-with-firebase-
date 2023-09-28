@@ -142,12 +142,15 @@
             const data = snapshot.val();
             if (!data) {
               list.innerHTML = "";
+              list.classList.add("d-none")
               return;
             }
+            list.classList.remove("d-none")
             let newData = Object.entries(data);
             console.log(data);
             console.log(newData);
-
+          
+           
             list.innerHTML = newData
 
               .map((el, index) => {
@@ -199,6 +202,20 @@
           render();
         }
 
+        addInp.addEventListener("keydown", function(e){
+          if(e.key=="Enter"){
+            const inputValue = {data:addInp.value.trim()};
+console.log(inputValue);
+          if (!inputValue) {
+            alert("Please enter a valid value!");
+            return;
+          }
+
+          push(todo, inputValue);
+          addInp.value = "";
+          render(); 
+          }
+        })
         function edit(id, info) {
           console.log(info);
           const refUpdate = ref(db, "todo/" + id);
@@ -225,7 +242,7 @@ console.log(inputValue);
 
           push(todo, inputValue);
           addInp.value = "";
-          render(); // Yeni görev ekledikten sonra listeyi yeniden çizin
+          render(); 
         });
 
         render();
