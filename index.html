@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <link
+      rel="stylesheet"
+      href="./src/style/reset.css"
+    />
+    <link
+      rel="stylesheet"
+      href="./src/style/bootstrap-min.css"
+    />
+    <link rel="stylesheet" href="./src/style/style.css" />
+    <link
+      rel="icon"
+      href="./src/icon/comments.png"
+      type="image/x-icon"
+    />
+    <title>Comment</title>
+  </head>
+  <body>
+    <header
+      style="height: 70px"
+      class="position-sticky top-0 z-2 d-flex w-100 text-light bg-info align-items-center justify-content-between"
+    >
+      <h1 class="fs-5 fw-medium ps-3">Add Your Comment</h1>
+      <nav class="pt-2">
+        <ul class="pe-3 d-flex gap-5 align-items-center">
+          <li>
+            <a
+              target="_blank"
+              class="fw-medium"
+              href="https://www.linkedin.com/in/aziz-azizli-3ba24a28a/"
+              >LinkedIn</a
+            >
+          </li>
+          <li>
+            <a
+              target="_blank"
+              class="fw-medium"
+              href="https://github.com/AzizzAzizli"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main
+      class="w-100 d-flex justify-content-center align-items-center"
+    >
+      <div class="container row justify-content-center align-items-center">
+        <div
+          class="content d-flex justify-content-center align-items-center col-sm-10 col-md-8 col-xl-6 col-12 flex-column gap-3"
+        >
+          <div class="w-100 d-flex gap-3">
+            <input
+              type="text"
+              placeholder="Write your comment..."
+              class="addInput rounded-3 w-100 p-2 border-0"
+            />
+            <button
+              id="addBtn"
+              class="btn btn-warning"
+            >
+              Add
+            </button>
+          </div>
+          <ul
+            class="list bg-light p-3 rounded-3 w-100 d-flex flex-column gap-3"
+          ></ul>
+
+          <div
+            id="editDiv"
+            class="position-fixed d-none w-100 mt-5 d-flex justify-content-center align-items-center row"
+            style="height: 120vh; background-color: rgba(0, 0, 0, 0.349)"
+          >
+            <div
+              class="col-10 col-lg-4 col-md-6 col-sm-8 d-flex flex-column gap-3 bg-warning p-3 rounded-3"
+            >
+              <input
+                id="editInput"
+                type="text"
+                class="p-2 rounded-3 border-0"
+                placeholder="Edit..."
+              />
+              <button
+                class="btn btn-primary"
+                id="saveBtn"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+
+      import {
+        getDatabase,
+        ref,
+        set,
+        push,
+        onValue,
+        remove,
+        update,
+      } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCFgvGu-t6GxzkIrZfHAZwM9dyclgfRQ5E",
+        authDomain: "todo-cdb48.firebaseapp.com",
+        databaseURL: "https://todo-cdb48-default-rtdb.firebaseio.com",
+        projectId: "todo-cdb48",
+        storageBucket: "todo-cdb48.appspot.com",
+        messagingSenderId: "844862078169",
+        appId: "1:844862078169:web:2387a431fe492c84d352c8",
+        measurementId: "G-CGN0N9SP1D",
+      };
+      const app = initializeApp(firebaseConfig);
+
+      const db = getDatabase(app);
+      const todo = ref(db, "todo");
+
+      const addBtn = document.querySelector("#addBtn");
+      const addInp = document.querySelector(".addInput");
+      const list = document.querySelector(".list");
+      const editInput = document.querySelector("#editInput");
+      const saveBtn = document.querySelector("#saveBtn");
+      const editDiv = document.querySelector("#editDiv");
+
+      document.addEventListener("DOMContentLoaded", function () {
+        function render() {
+          const starCountRef = ref(db, "todo");
+          onValue(starCountRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+              list.innerHTML = "";
+              return;
+            }
+            let newData = Object.entries(data);
+            console.log(data);
+            console.log(newData);
+
+            list.innerHTML = newData
+
+              .map((el, index) => {
+                return `<div class="d-flex w-100 gap-3">
+    <li class="d-flex w-100 fs-5 fw-medium">${index + 1}) ${uppercase( el[1].data)
+                }</li> 
+    <button class="btn btn-outline-danger delBtn" data-id="${
+      el[0]
+    }">Delete</button> 
+    <button id="editBtn" data-id="${el[0]}" data-info="${
+                  el[1].data
+                }" class="btn btn-outline-primary editBtn">Edit</button>
+</div>`;
+              })
+              .reverse()
+              .join("");
+
+            const delBtns = document.querySelectorAll(".delBtn");
+            const editBtns = document.querySelectorAll(".editBtn");
+
+            delBtns.forEach((el) => {
+              el.addEventListener("click", function () {
+                const id = el.dataset.id;
+                del(id);
+              });
+            });
+
+            editBtns.forEach((el) => {
+              el.addEventListener("click", function () {
+                editDiv.classList.remove("d-none");
+                const id = el.dataset.id;
+                const info = el.dataset.info;
+                // console.log(id,info);
+                editInput.value = info;
+                saveBtn.addEventListener("click", function () {
+                  // console.log(editInput.value);
+                  edit(id, editInput.value);
+                  editDiv.classList.add("d-none");
+                });
+              });
+            });
+          });
+        }
+
+        function del(id) {
+          const rmv = ref(db, "todo/" + id);
+
+          remove(rmv).then(() => console.log("Success"));
+          render();
+        }
+
+        function edit(id, info) {
+          console.log(info);
+          const refUpdate = ref(db, "todo/" + id);
+
+          update(refUpdate, {
+           data: info
+       });
+          render();
+        }
+
+      function uppercase(data){
+       return data[0].toUpperCase()+data.slice(1)
+       
+      }
+
+        addBtn.addEventListener("click", function () {
+
+          const inputValue = {data:addInp.value.trim()};
+console.log(inputValue);
+          if (!inputValue) {
+            alert("Please enter a valid value!");
+            return;
+          }
+
+          push(todo, inputValue);
+          addInp.value = "";
+          render(); // Yeni görev ekledikten sonra listeyi yeniden çizin
+        });
+
+        render();
+      });
+    </script>
+  </body>
+</html>
